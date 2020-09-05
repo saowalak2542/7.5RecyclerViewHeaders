@@ -27,18 +27,29 @@ import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.ListItemSleepNightBinding
 import com.example.android.trackmysleepquality.sleeptracker.SleepNightAdapter.TextViewHolder.Companion.from
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 private val ITEM_VIEW_TYPE_HEADER = 0
 private val ITEM_VIEW_TYPE_ITEM = 1
 class SleepNightAdapter(val clickListener: SleepNightListener):
         ListAdapter<SleepNightAdapter.SleepNightListener.DataItem, RecyclerView.ViewHolder>(SleepNightDiffCallback()) {
+    private val adapterScope = CoroutineScope(Dispatchers.Default)
     fun addHeaderAndSubmitList(list: List<SleepNight>?) {
-        val items = when (list) {
-            null -> listOf(SleepNightListener.DataItem.Header)
-            else -> listOf(SleepNightListener.DataItem.Header) + list.map { SleepNightListener.DataItem.SleepNightItem(it) }
+        adapterScope.launch {
+            val items = when (list) {
+                null -> listOf(SleepNightListener.DataItem.Header)
+                else -> listOf(SleepNightListener.DataItem.Header) + list.map {
+                    SleepNightListener.DataItem.SleepNightItem(it)
+                }
+            }
+            withContext(Dispatchers.Main) {
+                submitList(items)
+            }
         }
-        submitList(items)
     }
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
